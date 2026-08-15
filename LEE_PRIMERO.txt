@@ -1,0 +1,84 @@
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║     🤖 Q-POD MINI - CONFIGURADOR PORTÁTIL PARA PENDRIVE   ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+📋 ARCHIVOS EN ESTE PENDRIVE:
+
+✅ EJECUTABLES (Haz doble-clic):
+   
+   1️⃣  setup_portable.bat
+       → Ejecuta esto PRIMERO si es la primera vez
+       → Instala Python y las dependencias necesarias
+       → Solo necesitas hacerlo UNA SOLA VEZ
+   
+   2️⃣  INICIAR_GUI.bat (o INICIAR_GUI_SILENCIOSO.vbs)
+       → Abre la interfaz gráfica del configurador
+       → Úsalo después de ejecutar setup_portable.bat
+       → Lo puedes usar siempre que quieras configurar el robot
+   
+   3️⃣  VERIFICAR_SETUP.bat
+       → Comprueba que todo esté bien instalado
+       → Usa esto si tienes dudas
+
+
+📚 DOCUMENTACIÓN:
+
+   • README_PORTÁTIL.md
+     → Guía completa y detallada (¡LEE ESTO SI TIENES PROBLEMAS!)
+   
+   • QUICK_REFERENCE.md
+     → Comandos y referencias rápidas
+
+
+🚀 PASOS RÁPIDOS (primero en otro PC):
+
+   Paso 1: Conecta el pendrive
+   Paso 2: Doble-clic en setup_portable.bat (espera a que termine)
+   Paso 3: Doble-clic en INICIAR_GUI.bat (¡abierto!)
+   Paso 4: Conecta tu robot por USB/serial
+   Paso 5: Configura los parámetros en la interfaz
+
+
+⚙️ REQUISITOS MÍNIMOS:
+
+   • Windows 7 en adelante
+   • Python 3.8+ (si no tienes, setup_portable.bat lo verifica)
+   • Puerto USB disponible (para el robot)
+
+
+❓ ¿PROBLEMAS?
+
+   1. Lee: README_PORTÁTIL.md (sección TROUBLESHOOTING)
+   2. Ejecuta: VERIFICAR_SETUP.bat (para diagnosticar)
+   3. Prueba: setup_portable.bat de nuevo
+
+
+🎯 COMPATIBILIDAD:
+
+   ✅ Windows 10, 11
+   ✅ Windows 7, 8
+   ✅ Cualquier PC con Python 3.8+
+   ❌ No requiere instalación especial
+
+
+💾 TAMAÑO:
+
+   • Pendrive necesario: ~500 MB (con Python embebido opcional)
+   • Sin Python embebido: ~50 MB
+
+
+📝 NOTAS IMPORTANTES:
+
+   • Puedes dejar el pendrive enchufado mientras usas la app
+   • O copiar la carpeta a disco duro de la otra PC
+   • Los archivos de configuración (.json) se guardan en la misma carpeta
+   • No necesitas conexión a internet después de setup_portable.bat
+
+
+═══════════════════════════════════════════════════════════════
+
+¡LISTO PARA LLEVAR! 🚀 Enchufa el pendrive en otro PC y sigue los pasos.
+
+═══════════════════════════════════════════════════════════════

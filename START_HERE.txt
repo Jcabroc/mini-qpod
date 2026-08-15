@@ -1,0 +1,147 @@
+╔════════════════════════════════════════════════════════════╗
+║        Q-POD MINI - SISTEMA DE CONFIGURACIÓN               ║
+║                    ¡START HERE!                            ║
+╚════════════════════════════════════════════════════════════╝
+
+📦 ACABAS DE RECIBIR:
+
+✅ Interfaz gráfica Python (GUI)
+✅ Protocolo serial (Arduino ↔ PC)
+✅ Sistema EEPROM (guardar parámetros)
+✅ Configuraciones JSON (portables)
+✅ Documentación completa
+
+════════════════════════════════════════════════════════════
+
+🚀 INICIO EN 3 PASOS:
+
+1️⃣  INSTALAR DEPENDENCIAS:
+    
+    pip install pyserial
+
+2️⃣  PRUEBA RÁPIDA (sin Arduino):
+    
+    python quickstart_config.py
+
+3️⃣  INTERFAZ GRÁFICA COMPLETA:
+    
+    python gui_qpod_config.py
+
+════════════════════════════════════════════════════════════
+
+📚 LECTURA (En orden):
+
+1. QUICK_REFERENCE.md       ← Empieza aquí (5 min)
+2. README_CONFIGURACION.md  ← Manual completo (20 min)
+3. INTEGRACION_PASO_A_PASO.md ← Integrar en Arduino (15 min)
+4. INDEX.md                 ← Referencia de todos los archivos
+
+════════════════════════════════════════════════════════════
+
+🔌 INTEGRACIÓN ARDUINO:
+
+Necesitas añadir el protocolo serial a test_gait.ino
+
+👉 Lee: INTEGRACION_PASO_A_PASO.md (muy detallado)
+
+Son 5 pasos simples de copiar/pegar:
+   1. #include <EEPROM.h>
+   2. Copiar struct y funciones EEPROM
+   3. Copiar función serial_process()
+   4. Añadir eeprom_init() en setup()
+   5. Añadir serial_process() en loop()
+
+Tiempo total: 15 minutos
+
+════════════════════════════════════════════════════════════
+
+📂 ARCHIVOS IMPORTANTES:
+
+Python:
+  • gui_qpod_config.py       ← Interfaz gráfica ⭐
+  • quickstart_config.py     ← Carga rápida
+  • default_config.json      ← Configuración por defecto
+
+Arduino:
+  • serial_protocol.cpp      ← Protocolo (copiar a .ino)
+
+Documentos:
+  • QUICK_REFERENCE.md       ← Referencia rápida ⚡
+  • README_CONFIGURACION.md  ← Manual completo
+  • INTEGRACION_PASO_A_PASO.md ← Guía Arduino
+  • INDEX.md                 ← Descripción de archivos
+
+════════════════════════════════════════════════════════════
+
+✨ CARACTERÍSTICAS:
+
+✅ Cambiar parámetros SIN recompilar Arduino
+✅ Ver cambios en tiempo real
+✅ Guardar configuraciones en JSON
+✅ Almacenar en EEPROM (persistencia)
+✅ Interfaz gráfica intuitiva (6 tabs)
+✅ Terminal de debug integrada
+✅ Monitoreo de estado (NRF24, PCA9685, servos)
+
+════════════════════════════════════════════════════════════
+
+⚡ COMANDOS RÁPIDOS:
+
+# Test de conexión
+python quickstart_config.py
+
+# GUI completa
+python gui_qpod_config.py
+
+# Ver puertos COM
+python -c "import serial.tools.list_ports; print([p[0] for p in serial.tools.list_ports.comports()])"
+
+════════════════════════════════════════════════════════════
+
+🎯 PRÓXIMO PASO:
+
+Abre una PowerShell aquí y ejecuta:
+
+    pip install pyserial
+    python gui_qpod_config.py
+
+¡Listo! Se abrirá la interfaz gráfica.
+
+════════════════════════════════════════════════════════════
+
+❓ ¿NO FUNCIONA?
+
+1. Si NO instala pyserial:
+   python -m pip install pyserial --user
+
+2. Si Arduino no responde:
+   - Verifica que esté plugged
+   - Abre Monitor Serial de Arduino IDE
+   - Baud rate: 115200
+
+3. Si quieres ver qué pasa en Arduino:
+   - Monitor Serial → Selecciona puerto → OK
+   - Envía comando "INFO"
+
+════════════════════════════════════════════════════════════
+
+📞 SOPORTE RÁPIDO:
+
+Problema          | Solución
+─────────────────────────────────────
+Puerto no aparece | Drivers CH340 + reiniciar
+Serial error      | pip install pyserial
+GUI no abre       | Necesitas display (no SSH)
+Arduino no responde | Verifica serial_process() en loop()
+Parámetros no guardan | Usa botón "EEPROM_SAVE"
+
+════════════════════════════════════════════════════════════
+
+¡TODO LISTO! 🤖
+
+Adelante con la configuración del Q-POD.
+
+Preguntas → Lee la documentación correspondiente
+Bugs → Revisa Monitor Serial de Arduino IDE
+
+════════════════════════════════════════════════════════════

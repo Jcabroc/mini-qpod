@@ -290,16 +290,19 @@ Configuración: **115200 baud**, comandos terminados en nueva línea.
 | Comando | Condición | Acción |
 |---|---|---|
 | `HELP` | Cualquiera | Lista comandos |
-| `STATUS` | Cualquiera | Estado, fase y pata activa |
-| `CONFIG` | Cualquiera | Límites actuales |
+| `STATUS` | Cualquiera | Modo, PWM, canal seleccionado/activo, IMU, fase y pata |
+| `CONFIG` | Cualquiera | Mínimo, centro, máximo, dirección, margen y límites efectivos |
 | `IMU` | Cualquiera | Salud, roll y pitch |
+| `PING` | Cualquiera | Renueva la comunicación de calibración; nunca habilita ni mueve servos |
 | `OFF` | Cualquiera | Detiene y desenergiza servos |
-| `CALIB` | Operación controlada | Activa calibración y centra objetivos |
-| `CENTER` | `CALIBRATION` | Lleva todos los objetivos al centro |
-| `SERVO <ch> <deg>` | `CALIBRATION` | Mueve un canal dentro de límites seguros |
+| `CALIB` | IMU segura | Entra a calibración con todos los PWM apagados |
+| `SELECT <ch>` | `CALIBRATION` | Selecciona canal y apaga antes el anterior; no energiza |
+| `ENABLE <ch> <deg>` | Canal seleccionado e IMU segura | Activa solo ese canal con el primer PWM explícito |
+| `CENTER <ch>` | Canal seleccionado y habilitado | Lleva solo ese canal al centro efectivo |
+| `SERVO <ch> <deg>` | Canal seleccionado y habilitado | Mueve solo ese canal dentro de límites seguros |
 | `LIMITS <ch> <min> <center> <max>` | `CALIBRATION` | Cambia límites en RAM |
-| `SAVE` | Configuración válida | Guarda EEPROM |
-| `LOAD` | Cualquiera | Recupera EEPROM válida |
+| `SAVE` | `SAFE_OFF`, configuración válida | Guarda EEPROM |
+| `LOAD` | `SAFE_OFF` | Recupera EEPROM válida |
 | `DEFAULTS` | `SAFE_OFF` | Restaura valores compilados en RAM |
 | `STAND` | Zona despejada | Activa postura base |
 | `LEG <0..3>` | `STAND_MODE` | Prueba una pata |
@@ -320,7 +323,16 @@ Configuración: **115200 baud**, comandos terminados en nueva línea.
 10. Ante ruido, calentamiento, vibración, reinicio o bloqueo: cortar energía.
 
 Con IMU activa, una lectura inválida o inclinación mayor al umbral detiene el
-movimiento y apaga los servos. Esta protección todavía requiere validación física.
+movimiento y apaga los servos, incluida la calibración. La inclinación durante
+calibración se controla con `CALIBRATION_ABORT_ON_TILT`, que parte en `true` por
+seguridad aunque el robot esté elevado. Esta protección todavía requiere
+validación física.
+
+Con un canal habilitado en `CALIBRATION`, el Nano exige comunicación válida de la
+aplicación: `PING` o un comando de calibración válido deben llegar en menos de
+1000 ms. Si vence ese plazo, el Nano apaga todos los PWM, limpia selección y
+canal activo, entra a `SAFE_OFF` y deja `abort=HOST_TIMEOUT` enclavado en
+`STATUS`. `PING` no puede habilitar ni mover un servo.
 
 ## 12. Procedimiento de validación
 

@@ -90,5 +90,11 @@ constexpr float DEFAULT_MAX_SAFE_TILT_DEG = 12.0f;
 constexpr float DEFAULT_BALANCE_KP = 0.35f;
 constexpr float DEFAULT_MAX_BALANCE_CORRECTION_DEG = 4.0f;
 
+// La calibracion se realiza con el robot elevado, pero conserva por defecto la
+// misma proteccion de inclinacion que los modos de movimiento. Puede relajarse
+// solo tras una validacion fisica explicita; perder la IMU siempre aborta.
+constexpr bool CALIBRATION_ABORT_ON_TILT = true;
+constexpr uint16_t CALIBRATION_HOST_TIMEOUT_MS = 1000;
+
 // El usuario debe habilitar la marcha explicitamente despues de las pruebas.
 constexpr bool WALK_ENABLED_AT_BOOT = false;

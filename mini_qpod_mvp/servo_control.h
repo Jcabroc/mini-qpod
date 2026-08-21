@@ -17,6 +17,7 @@ class ServoController {
 
   static constexpr uint16_t STORAGE_MAGIC = 0x514D; // "QM"
   static constexpr uint8_t STORAGE_VERSION = 1;
+  static constexpr int8_t NO_ACTIVE_CHANNEL = -1;
 
   explicit ServoController(Adafruit_PWMServoDriver &driver) : pca_(driver) {}
 
@@ -97,12 +98,37 @@ class ServoController {
 
   void enable() {
     enabled_ = true;
+    activeChannel_ = NO_ACTIVE_CHANNEL;
     lastUpdateMs_ = millis();
   }
 
   void disable() {
     enabled_ = false;
+    activeChannel_ = NO_ACTIVE_CHANNEL;
     for (uint8_t i = 0; i < SERVO_COUNT; ++i) pca_.setPWM(config_.servos[i].channel, 0, 0);
+  }
+
+  // Activa unicamente un canal para calibracion. El primer PWM se escribe de
+  // forma explicita al angulo solicitado: el operador debe advertir el posible
+  // salto desde la posicion sin energia antes de llamar a este metodo.
+  bool enableOnly(uint8_t index, float firstAngle, float &effectiveAngle) {
+    if (index >= SERVO_COUNT || !config_.servos[index].enabled) return false;
+    disable();
+    effectiveAngle = clampSafe(index, firstAngle);
+    current_[index] = effectiveAngle;
+    target_[index] = effectiveAngle;
+    enabled_ = true;
+    activeChannel_ = (int8_t)index;
+    lastUpdateMs_ = millis();
+    writePhysical(index, effectiveAngle);
+    return true;
+  }
+
+  bool setActiveTarget(uint8_t index, float angle, float &effectiveAngle) {
+    if (!enabled_ || activeChannel_ != (int8_t)index) return false;
+    effectiveAngle = clampSafe(index, angle);
+    target_[index] = effectiveAngle;
+    return true;
   }
 
   void update() {
@@ -112,7 +138,13 @@ class ServoController {
     if (elapsed < MOTION_UPDATE_MS) return;
     lastUpdateMs_ = now;
     float maxStep = DEFAULT_MAX_SPEED_DEG_S * (elapsed / 1000.0f);
-    for (uint8_t i = 0; i < SERVO_COUNT; ++i) {
+    uint8_t first = 0;
+    uint8_t last = SERVO_COUNT;
+    if (activeChannel_ != NO_ACTIVE_CHANNEL) {
+      first = (uint8_t)activeChannel_;
+      last = first + 1;
+    }
+    for (uint8_t i = first; i < last; ++i) {
       if (!config_.servos[i].enabled) continue;
       float delta = target_[i] - current_[i];
       if (delta > maxStep) delta = maxStep;
@@ -124,11 +156,16 @@ class ServoController {
 
   float minSafe(uint8_t i) const { return config_.servos[i].minAngle + config_.safetyMarginDeg; }
   float maxSafe(uint8_t i) const { return config_.servos[i].maxAngle - config_.safetyMarginDeg; }
+  uint8_t safetyMargin() const { return config_.safetyMarginDeg; }
   float center(uint8_t i) const { return config_.servos[i].centerAngle; }
   float current(uint8_t i) const { return current_[i]; }
   float target(uint8_t i) const { return target_[i]; }
   const ServoConfig &config(uint8_t i) const { return config_.servos[i]; }
   bool enabled() const { return enabled_; }
+  int8_t activeChannel() const { return activeChannel_; }
+  bool isOnlyChannelEnabled(uint8_t index) const {
+    return enabled_ && activeChannel_ == (int8_t)index;
+  }
 
   float towardMin(uint8_t i, float gain) const {
     return center(i) + (minSafe(i) - center(i)) * constrain(gain, 0.0f, 1.0f);
@@ -145,6 +182,7 @@ class ServoController {
   float target_[SERVO_COUNT] = {};
   uint32_t lastUpdateMs_ = 0;
   bool enabled_ = false;
+  int8_t activeChannel_ = NO_ACTIVE_CHANNEL;
 
   float clampSafe(uint8_t index, float angle) const {
     return constrain(angle, minSafe(index), maxSafe(index));
@@ -164,4 +202,3 @@ class ServoController {
     return sum;
   }
 };
-

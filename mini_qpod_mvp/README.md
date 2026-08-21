@@ -57,17 +57,41 @@ El arranque siempre deja los servos apagados. Escriba `HELP` para ver comandos.
 - Eleve el robot para que ninguna pata soporte peso.
 - Tenga preparada la desconexión de la fuente de servos.
 
-### 2. Centro inicial
+### 2. Entrada segura a calibración
 
-Conecte la alimentación de servos y ejecute:
+Antes de alimentar los servos, compruebe que `IMU` informa `healthy=1`. Ejecute:
 
 ```text
 CALIB
-CENTER
 ```
 
-El movimiento está limitado a 35 grados por segundo. Si una articulación se
-acerca a un choque, ejecute `OFF` o corte la alimentación.
+`CALIB` entra al modo de calibración con todos los PWM apagados. Después elija
+explícitamente un canal; `SELECT` apaga primero cualquier canal que estuviera
+habilitado y no produce PWM:
+
+```text
+SELECT 0
+```
+
+Solo `ENABLE` escribe el primer PWM, por lo que puede mover el servo de inmediato
+desde su posición sin energía. Indique un ángulo inicial deliberado y mantenga
+acceso a `OFF` y al corte de fuente:
+
+```text
+ENABLE 0 90
+```
+
+Durante calibración se habilita como máximo un canal. La pérdida de IMU aborta y
+apaga los PWM. Por defecto, una inclinación mayor a 12° también aborta incluso si
+el robot está elevado; `CALIBRATION_ABORT_ON_TILT` en `robot_config.h` documenta
+y hace configurable esa política.
+
+Con un canal habilitado, la aplicación debe enviar `PING` válido al menos cada
+segundo. El calibrador provisional lo hace cada 250 ms. Si transcurre más de
+`CALIBRATION_HOST_TIMEOUT_MS` (1000 ms) sin `PING` ni un comando válido de
+calibración, el Nano apaga todos los PWM, limpia el canal seleccionado y vuelve a
+`SAFE_OFF` con `[ABORT] HOST_TIMEOUT`. Un nuevo enlace nunca reactiva servos:
+requiere otra vez `CALIB`, `SELECT` y `ENABLE`.
 
 ### 3. Calibración de cada servo
 
@@ -75,7 +99,7 @@ Mueva un servo a la vez con incrementos pequeños:
 
 ```text
 SERVO 0 88
-SERVO 0 86
+CENTER 0
 ```
 
 Después de encontrar valores seguros, registre mínimo, centro y máximo:
@@ -91,14 +115,16 @@ interno de 5 grados a cada extremo. Repita para los canales 0 a 12 y revise:
 CONFIG
 ```
 
-Guarde solamente después de probar todos los canales:
+`LIMITS` exige que el PWM esté apagado. Ejecute `SELECT` (que apaga el canal),
+ajuste los valores y vuelva a habilitar explícitamente el canal para probarlos.
+Guarde solamente después de probar todos los canales y apagar los PWM:
 
 ```text
-SAVE
 OFF
+SAVE
 ```
 
-`LOAD` recupera EEPROM. `DEFAULTS`, permitido solo en `OFF`, recupera los valores
+`LOAD` recupera EEPROM únicamente en `OFF`. `DEFAULTS`, permitido solo en `OFF`, recupera los valores
 compilados en `robot_config.h`; después hay que probarlos antes de ejecutar
 `SAVE`.
 

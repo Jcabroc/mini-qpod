@@ -6,7 +6,9 @@ import queue
 import threading
 import tkinter as tk
 from tkinter import messagebox, ttk
+from pathlib import Path
 
+from backup import ActiveConfigCollector, BackupGate, build_backup, compare_channels, write_backup
 from protocol import BAUDRATE, ELECTRICAL_CENTER_DEG, SERVO_NAMES, attempt_safe_off, command_is_allowed, command_name, parse_float, parse_int, parse_key_values
 from simulated_serial import SimulatedSerial
 
@@ -41,6 +43,13 @@ class ServoCalibratorApp(tk.Tk):
         self.active_channel = -1
         self.selected_channel = -1
         self.configs: dict[int, dict[str, str]] = {}
+        self.active_rows: list[dict[str, int | str]] = []
+        self.live_collector = ActiveConfigCollector()
+        self.backup_collector = ActiveConfigCollector()
+        self.backup_capture_pending = False
+        self.backup_snapshot: dict[str, object] | None = None
+        self.backup_gate = BackupGate()
+        self.firmware_identification = "UNKNOWN"
 
         self.port_var = tk.StringVar()
         self.connection_var = tk.StringVar(value="DESCONECTADO")
@@ -60,6 +69,8 @@ class ServoCalibratorApp(tk.Tk):
         self.safe_max_var = tk.StringVar(value="—")
         self.direction_var = tk.StringVar(value="—")
         self.raw_command_var = tk.StringVar()
+        self.backup_var = tk.StringVar(value="Respaldo obligatorio antes de LIMITS/SAVE.")
+        self.comparison_var = tk.StringVar(value="Comparación: sin respaldo confirmado.")
 
         self._build_ui()
         self.refresh_ports()
@@ -159,7 +170,15 @@ class ServoCalibratorApp(tk.Tk):
         self.save_button.grid(row=2, column=5, sticky="w", padx=4, pady=(7, 0))
         self.load_button = ttk.Button(configuration, text="LOAD (solo OFF)", command=lambda: self.send_command("LOAD"))
         self.load_button.grid(row=2, column=6, sticky="w", padx=4, pady=(7, 0))
-        ttk.Label(configuration, text="En este MVP, centerAngle es la posición neutral/inicial; el centro mecánico todavía no se persiste por separado.", wraplength=980).grid(row=3, column=0, columnspan=8, sticky="w", padx=4, pady=(7, 0))
+        self.backup_button = ttk.Button(configuration, text="Leer y respaldar configuración activa", command=self.read_and_backup)
+        self.backup_button.grid(row=2, column=0, columnspan=3, sticky="w", padx=4, pady=(34, 0))
+        self.confirm_backup_button = ttk.Button(configuration, text="Confirmar respaldo", command=self.confirm_backup)
+        self.confirm_backup_button.grid(row=2, column=3, columnspan=2, sticky="w", padx=4, pady=(34, 0))
+        self.compare_button = ttk.Button(configuration, text="Comparar respaldo vs. activa", command=self.compare_backup)
+        self.compare_button.grid(row=2, column=5, columnspan=2, sticky="w", padx=4, pady=(34, 0))
+        ttk.Label(configuration, textvariable=self.backup_var).grid(row=3, column=0, columnspan=9, sticky="w", padx=4, pady=(7, 0))
+        ttk.Label(configuration, textvariable=self.comparison_var, wraplength=980).grid(row=4, column=0, columnspan=9, sticky="w", padx=4, pady=(3, 0))
+        ttk.Label(configuration, text="En este MVP, centerAngle es la posición neutral/inicial; el centro mecánico todavía no se persiste por separado. No existe restauración desde respaldo.", wraplength=980).grid(row=5, column=0, columnspan=9, sticky="w", padx=4, pady=(3, 0))
 
         terminal = ttk.LabelFrame(root, text="Terminal de diagnóstico (lista blanca)", padding=8)
         terminal.grid(row=4, column=0, sticky="nsew", pady=(8, 0))
@@ -208,6 +227,14 @@ class ServoCalibratorApp(tk.Tk):
         self.motion_locked = True
         self.status_seen = self.imu_seen = self.config_seen = False
         self.configs.clear()
+        self.active_rows = []
+        self.live_collector.reset()
+        self.backup_collector.reset()
+        self.backup_capture_pending = False
+        self.backup_snapshot = None
+        self.backup_gate.reset()
+        self.backup_var.set("Respaldo obligatorio antes de LIMITS/SAVE.")
+        self.comparison_var.set("Comparación: sin respaldo confirmado.")
         self.stop_reader.clear()
         self.reader = threading.Thread(target=self._reader_loop, daemon=True)
         self.reader.start()
@@ -267,6 +294,8 @@ class ServoCalibratorApp(tk.Tk):
             self._emergency_lock("ABORT recibido del Nano")
             return
         try:
+            if line.startswith("MINI Q-POD MVP"):
+                self.firmware_identification = line
             if line.startswith("STATUS "):
                 data = parse_key_values(line)
                 required = {"mode", "servos", "selected", "active", "imu", "abort"}
@@ -300,20 +329,24 @@ class ServoCalibratorApp(tk.Tk):
                     self._emergency_lock("IMU perdida")
                     return
             elif line.startswith("CONFIG margin="):
-                data = parse_key_values(line)
-                parse_int(data["margin"], low=0, high=20)
+                self.live_collector.reset()
+                self.live_collector.accept_margin(line)
+                self.configs.clear()
+                if self.backup_capture_pending:
+                    self.backup_collector.accept_margin(line)
             elif line.startswith("CONFIG ch="):
+                self.live_collector.accept_channel(line)
                 data = parse_key_values(line)
-                required = {"ch", "channel", "min", "center", "max", "direction", "margin", "safeMin", "safeMax"}
-                if not required <= data.keys():
-                    raise ValueError("CONFIG incompleta")
                 channel = parse_int(data["ch"], low=0, high=12)
-                for key in required - {"ch"}:
-                    parse_float(data[key])
                 self.configs[channel] = data
-                if len(self.configs) == len(SERVO_NAMES):
+                if self.live_collector.complete:
+                    self.active_rows = self.live_collector.rows()
                     self.config_seen = True
                     self._display_selected_config()
+                if self.backup_capture_pending:
+                    self.backup_collector.accept_channel(line)
+                    if self.backup_collector.complete:
+                        self._finalize_backup()
             elif line.startswith("[SELECT]"):
                 data = parse_key_values(line.replace("[SELECT]", "SELECT", 1))
                 self.selected_channel = parse_int(data["ch"], low=0, high=12)
@@ -408,6 +441,9 @@ class ServoCalibratorApp(tk.Tk):
         self.send_command(f"SERVO {channel} {angle:g}")
 
     def apply_limits(self) -> None:
+        if not self.backup_gate.allows_modifications:
+            self._log("[BLOQUEADO] LIMITS requiere respaldo guardado y confirmado.")
+            return
         channel = self._selected_index()
         if channel is None:
             return
@@ -426,6 +462,74 @@ class ServoCalibratorApp(tk.Tk):
         self.send_command("STATUS", internal=True)
         self.send_command("IMU", internal=True)
         self.send_command("CONFIG", internal=True)
+
+    def read_and_backup(self) -> None:
+        if not self.connected:
+            self._log("[LOCAL] No se puede respaldar sin conexión.")
+            return
+        self.backup_gate.reset()
+        self.backup_snapshot = None
+        self.backup_collector.reset()
+        self.backup_capture_pending = True
+        self.backup_var.set("Leyendo CONFIG: se requieren los 13 canales válidos.")
+        self.comparison_var.set("Comparación: esperando respaldo.")
+        self._set_controls()
+        self.send_command("CONFIG", internal=True)
+
+    def _finalize_backup(self) -> None:
+        try:
+            rows = self.backup_collector.rows()
+            snapshot = build_backup(
+                active_rows=rows,
+                global_margin=self.backup_collector.global_margin or 0,
+                port=self.port_var.get(),
+                firmware=self.firmware_identification,
+            )
+            destination = write_backup(snapshot, Path(__file__).resolve().parent / "backups")
+        except (OSError, ValueError) as exc:
+            self._backup_failed(f"No se pudo guardar respaldo: {exc}")
+            return
+        self.backup_capture_pending = False
+        self.backup_snapshot = snapshot
+        self.backup_gate.mark_saved(destination)
+        self.backup_var.set(f"Respaldo guardado: {destination.name}. Confírmelo para habilitar LIMITS/SAVE.")
+        self.comparison_var.set("Comparación: respaldo y configuración activa coinciden.")
+        self._log(f"[BACKUP] {destination}")
+        self._set_controls()
+
+    def _backup_failed(self, reason: str) -> None:
+        self.backup_capture_pending = False
+        self.backup_snapshot = None
+        self.backup_gate.reset()
+        self.backup_var.set(f"BLOQUEADO: {reason}")
+        self._log(f"[BACKUP ERROR] {reason}")
+        self._set_controls()
+
+    def confirm_backup(self) -> None:
+        try:
+            self.backup_gate.confirm()
+        except ValueError as exc:
+            self._log(f"[BLOQUEADO] {exc}")
+            return
+        self.backup_var.set(f"Respaldo confirmado: {self.backup_gate.saved_path.name}")
+        self._set_controls()
+
+    def compare_backup(self) -> None:
+        if self.backup_snapshot is None:
+            self.comparison_var.set("Comparación: primero lea y respalde una configuración completa.")
+            return
+        try:
+            if not self.live_collector.complete:
+                raise ValueError("configuración activa incompleta")
+            changes = compare_channels(self.backup_snapshot["channels"], self.live_collector.rows())  # type: ignore[arg-type]
+        except (KeyError, ValueError) as exc:
+            self.comparison_var.set(f"Comparación no disponible: {exc}")
+            return
+        if not changes:
+            self.comparison_var.set("Comparación: sin cambios.")
+            return
+        summary = "; ".join(f"ch {channel} ({SERVO_NAMES[channel]}): {', '.join(fields)}" for channel, fields in changes.items())
+        self.comparison_var.set(f"Cambios: {summary}")
 
     def servos_off(self) -> None:
         if self.connected:
@@ -449,6 +553,9 @@ class ServoCalibratorApp(tk.Tk):
             self._log(f"[BLOQUEADO] {command_name(line)} no está permitido.")
             return
         movement = command_name(line) in {"CALIB", "SELECT", "ENABLE", "CENTER", "SERVO", "LIMITS"}
+        if command_name(line) in {"LIMITS", "SAVE"} and not self.backup_gate.allows_modifications and not internal:
+            self._log(f"[BLOQUEADO] {command_name(line)} requiere respaldo guardado y confirmado.")
+            return
         if movement and self.motion_locked and not internal:
             self._log("[LOCAL] Movimiento bloqueado por estado de seguridad.")
             return
@@ -474,12 +581,18 @@ class ServoCalibratorApp(tk.Tk):
 
     def _set_controls(self) -> None:
         safe_state = "normal" if self.connected and not self.motion_locked else "disabled"
-        for widget in (self.calib_button, self.select_button, self.enable_button, self.center_button, self.manual_button, self.apply_limits_button, self.read_button, self.save_button, self.load_button, self.raw_button, self.first_entry, self.manual_entry, self.servo_box):
+        modification_state = safe_state if self.backup_gate.allows_modifications else "disabled"
+        for widget in (self.calib_button, self.select_button, self.enable_button, self.center_button, self.manual_button, self.read_button, self.load_button, self.raw_button, self.first_entry, self.manual_entry, self.servo_box):
             widget.configure(state=safe_state)
+        for widget in (self.apply_limits_button, self.save_button):
+            widget.configure(state=modification_state)
+        self.backup_button.configure(state="normal" if self.connected else "disabled")
+        self.confirm_backup_button.configure(state="normal" if self.connected and self.backup_gate.saved_path is not None and not self.backup_gate.confirmed else "disabled")
+        self.compare_button.configure(state="normal" if self.connected and self.backup_snapshot is not None else "disabled")
         for index in range(4):
             getattr(self, f"delta_{index}").configure(state=safe_state)
         for widget in self.config_input_widgets:
-            widget.configure(state=safe_state)
+            widget.configure(state=modification_state)
         self.off_button.configure(state="normal" if self.connected else "disabled")
         self.connect_button.configure(state="disabled" if self.connected else "normal")
         self.disconnect_button.configure(state="normal" if self.connected else "disabled")

@@ -58,6 +58,12 @@ class ImuManager {
   }
 
   void parseLine() {
+    // Pico Sensor Station shares this one-way UART safely. Forward its
+    // telemetry to the Nano USB port; only validated IMU frames control motion.
+    if (!strncmp(line_, "SENSOR,", 7)) {
+      Serial.println(line_);
+      return;
+    }
     // Trama: IMU,<secuencia>,<roll>,<pitch>*<crc XOR hexadecimal>
     char *star = strrchr(line_, '*');
     if (!star || strncmp(line_, "IMU,", 4)) return;
@@ -80,7 +86,6 @@ class ImuManager {
     healthy_ = true;
   }
 };
-
 class GaitBalance {
  public:
   enum Phase : uint8_t { IDLE, SHIFT, LIFT, SWING, DROP, SETTLE };
@@ -250,6 +255,7 @@ class GaitBalance {
     return lowWasMin ? servos_.towardMax(ch, gain) : servos_.towardMin(ch, gain);
   }
 };
+#if 0  // Historical misplaced relay block; kept disabled for source compatibility.
     // Pico Sensor Station can share the same one-way UART safely.  These lines
     // are forwarded unchanged to the Nano USB serial port for POD Station;
     // only the CRC-protected IMU frame below affects movement or balance.
@@ -257,3 +263,4 @@ class GaitBalance {
       Serial.println(line_);
       return;
     }
+#endif

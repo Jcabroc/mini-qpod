@@ -356,3 +356,56 @@ void printHelp() {
   Serial.println(F("STAND | LEG <0..3> | UNLOCK_WALK | WALK"));
   Serial.println(F("Patas: 0=L1, 1=R1, 2=L2, 3=R2"));
 }
+constexpr uint8_t SONAR_PAN_CHANNEL = 12;  // Neck servo carrying the sonar head.
+constexpr float SONAR_PAN_CENTER_DEG = 90.0f;
+constexpr float SONAR_PAN_MIN_DEG = 67.5f;
+constexpr float SONAR_PAN_MAX_DEG = 112.5f;
+  } else if (!strcmp(cmd, "SENSORS")) {
+    if (strtok(nullptr, " \t")) { Serial.println(F("[ERR] SENSORS no recibe argumentos.")); return; }
+    Serial.println(F("SENSORS relay=UART_PICO live=enabled"));
+  } else if (!strcmp(cmd, "SONAR_ARM")) {
+    if (strtok(nullptr, " \t")) { Serial.println(F("[ERR] SONAR_ARM no recibe argumentos.")); return; }
+    if (mode != SAFE_OFF || !calibrationImuSafe()) {
+      Serial.println(F("[ERR] SONAR_ARM exige SAFE_OFF e IMU segura.")); return;
+    }
+    servos.disable(); motion.stop(); selectedChannel = SONAR_PAN_CHANNEL;
+    if (!servos.beginTemporaryWindow(SONAR_PAN_CHANNEL)) { Serial.println(F("[ERR] Ventana de sonar no disponible.")); return; }
+    float effective;
+    if (!servos.enableOnly(SONAR_PAN_CHANNEL, SONAR_PAN_CENTER_DEG, effective)) {
+      selectedChannel = -1; Serial.println(F("[ERR] No se pudo habilitar CH12.")); return;
+    }
+    mode = CALIBRATION; abortCause = ABORT_NONE; refreshCalibrationHostActivity();
+    Serial.print(F("[SONAR] ARM ch=12 angle=")); Serial.println(effective, 1);
+  } else if (!strcmp(cmd, "SONAR")) {
+    char *angleText = strtok(nullptr, " \t"); float requested, effective;
+    if (!angleText || strtok(nullptr, " \t") || !parseFloatStrict(angleText, requested) ||
+        requested < SONAR_PAN_MIN_DEG || requested > SONAR_PAN_MAX_DEG) {
+      Serial.println(F("[ERR] Uso: SONAR <67.5..112.5>.")); return;
+    }
+    if (mode != CALIBRATION || selectedChannel != SONAR_PAN_CHANNEL ||
+        !servos.isOnlyChannelEnabled(SONAR_PAN_CHANNEL)) {
+      Serial.println(F("[ERR] Use SONAR_ARM antes de mover la cabeza.")); return;
+    }
+    if (!calibrationImuSafe() || !servos.setActiveTarget(SONAR_PAN_CHANNEL, requested, effective)) {
+      abortToSafeOff(ABORT_IMU_UNSAFE); return;
+    }
+    refreshCalibrationHostActivity();
+    Serial.print(F("[SONAR] angle=")); Serial.println(effective, 1);
+  } else if (!strcmp(cmd, "SONAR_OFF")) {
+    if (strtok(nullptr, " \t")) { Serial.println(F("[ERR] SONAR_OFF no recibe argumentos.")); return; }
+    servos.disable(); motion.stop(); selectedChannel = -1; mode = SAFE_OFF;
+    Serial.println(F("[SONAR] OFF PWM=OFF"));
+  } else if (!strcmp(cmd, "SONAR_PING")) {
+    // Silent watchdog refresh emitted only by the station while SONAR is armed.
+    if (mode == CALIBRATION && selectedChannel == SONAR_PAN_CHANNEL) refreshCalibrationHostActivity();
+  } else if (!strcmp(cmd, "BEEP")) {
+    char *frequencyText = strtok(nullptr, " \t"), *durationText = strtok(nullptr, " \t");
+    int frequency, duration;
+    if (!frequencyText || !durationText || strtok(nullptr, " \t") ||
+        !parseIntStrict(frequencyText, frequency) || !parseIntStrict(durationText, duration) ||
+        frequency < 100 || frequency > 4000 || duration < 20 || duration > 1000) {
+      Serial.println(F("[ERR] Uso: BEEP <100..4000 Hz> <20..1000 ms>.")); return;
+    }
+    tone(PIN_BUZZER, (unsigned int)frequency, (unsigned long)duration);
+    Serial.print(F("[BEEP] frequency=")); Serial.print(frequency);
+    Serial.print(F(" duration=")); Serial.println(duration);

@@ -250,3 +250,10 @@ class GaitBalance {
     return lowWasMin ? servos_.towardMax(ch, gain) : servos_.towardMin(ch, gain);
   }
 };
+    // Pico Sensor Station can share the same one-way UART safely.  These lines
+    // are forwarded unchanged to the Nano USB serial port for POD Station;
+    // only the CRC-protected IMU frame below affects movement or balance.
+    if (!strncmp(line_, "SENSOR,", 7)) {
+      Serial.println(line_);
+      return;
+    }

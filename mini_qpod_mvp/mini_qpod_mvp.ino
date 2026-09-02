@@ -369,7 +369,6 @@ constexpr float SONAR_PAN_MAX_DEG = 112.5f;
       Serial.println(F("[ERR] SONAR_ARM exige SAFE_OFF e IMU segura.")); return;
     }
     servos.disable(); motion.stop(); selectedChannel = SONAR_PAN_CHANNEL;
-    if (!servos.beginTemporaryWindow(SONAR_PAN_CHANNEL)) { Serial.println(F("[ERR] Ventana de sonar no disponible.")); return; }
     float effective;
     if (!servos.enableOnly(SONAR_PAN_CHANNEL, SONAR_PAN_CENTER_DEG, effective)) {
       selectedChannel = -1; Serial.println(F("[ERR] No se pudo habilitar CH12.")); return;

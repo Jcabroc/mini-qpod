@@ -33,6 +33,27 @@ una plataforma segura y calibrable que:
 
 La cinemática inversa no pertenece al alcance del MVP actual.
 
+### Modelo matemático independiente en PC (2026-09-08)
+
+`tools/ik_simulator/` contiene la IK/FK y sus pruebas independientes del firmware.
+Las medidas confirmadas desde el STEP original son: separación entre centros
+COXA de 93.0 mm en ancho y largo; COXA=42.294 mm, FEMUR=60.611 mm y
+TIBIA=88.714 mm, centro a centro. Origen en el centro geométrico del cuerpo,
++X derecha, +Y frontal, +Z arriba; montaje COXA en Z=0 como supuesto del modelo.
+Montajes (X mm, Y mm, yaw): L1=(-46.5,+46.5,+135°),
+R1=(+46.5,+46.5,+45°), L2=(-46.5,-46.5,-135°), R2=(+46.5,-46.5,-45°).
+El yaw es mecánico/radial alrededor de +Z, desde +X hacia +Y.
+La conversión a ángulos eléctricos por canal se implementará en una capa
+posterior. Este modelo no cambia EEPROM, límites ni sketches de movimiento.
+Convenciones, ecuaciones, selección de ramas y comando de pruebas se documentan
+en `tools/ik_simulator/README.md`; no se declara validación física.
+
+La interpretación de referencias CAD y la separación entre geometría ideal,
+calibración eléctrica, sobre mecánico y colisiones se registra en
+`docs/ik_constraints.md`. `tools/ik_simulator/validation.py` agrega avisos de
+fronteras singulares y comprobaciones físicas pendientes; no aplica como topes
+las cotas ilustrativas CAD ni habilita movimientos físicos.
+
 ## 2. Política de fuente de verdad
 
 ### 2.1 Archivos oficiales

@@ -54,6 +54,11 @@ calibración eléctrica, sobre mecánico y colisiones se registra en
 fronteras singulares y comprobaciones físicas pendientes; no aplica como topes
 las cotas ilustrativas CAD ni habilita movimientos físicos.
 
+`tools/ik_pose_lab/` añade una aplicación Tkinter de escritorio que consume
+esta IK/validación, con tres proyecciones simultáneas y poses JSON versionadas.
+Sus presets READY y X_NEUTRAL son ejemplos matemáticos; los indicadores de
+incertidumbre no son detección de colisión. No incluye transporte físico.
+
 ## 2. Política de fuente de verdad
 
 ### 2.1 Archivos oficiales

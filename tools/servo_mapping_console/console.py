@@ -21,6 +21,10 @@ class ServoMappingConsole:
         self.imu_healthy = True
         self.armed_channel: Optional[int] = None
         self.ready_event = threading.Event()
+        self.config_event = threading.Event()
+        self.config_channels = set()
+        self.anomalies = []
+        self.ping_sent = 0
 
     def _line(self, line: str) -> str:
         stamp = self.wall_clock().isoformat(timespec="milliseconds")
@@ -38,6 +42,13 @@ class ServoMappingConsole:
             self.emergency()
         if line.startswith("PWM_requested=OFF"):
             self.ready_event.set()
+        if "\ufffd" in line or (line.startswith("REPLY cmd=") and "result=0" not in line):
+            self.anomalies.append(line)
+        m = re.match(r"CONFIG ch=(\d+) min=", line)
+        if m:
+            self.config_channels.add(int(m.group(1)))
+            if len(self.config_channels) == 13:
+                self.config_event.set()
         return line
 
     def send(self, command: str) -> None:
@@ -49,8 +60,17 @@ class ServoMappingConsole:
         else:
             payload = command + "\n"
         with self.lock:
-            self.serial.write(payload.encode("ascii"))
+            # The Nano services USB UART cooperatively while also servicing
+            # SoftwareSerial IMU input. Byte pacing prevents dropped characters.
+            encoded = payload.encode("ascii")
+            if hasattr(self.serial, "writes"):  # deterministic simulated transport
+                self.serial.write(encoded)
+            else:
+                for byte in encoded:
+                    self.serial.write(bytes((byte,)))
+                    time.sleep(0.002)
             self.serial.flush()
+            if command == "PING": self.ping_sent += 1
 
     @staticmethod
     def validate(command: str) -> bool:
@@ -96,6 +116,8 @@ class ServoMappingConsole:
         time.sleep(0.15)
         for command in ("STATUS", "IMU", "CONFIG"):
             self.send(command)
+        if not self.config_event.wait(3.0):
+            raise RuntimeError("CONFIG inicial incompleto: no se recibieron las 13 líneas")
         self.heartbeat_thread = threading.Thread(target=self._heartbeat, daemon=True); self.heartbeat_thread.start()
 
     def arm_ch0(self, angle: float, confirm) -> None:

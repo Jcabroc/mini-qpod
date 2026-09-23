@@ -15,6 +15,8 @@ class FakeSerial:
 class ConsoleTests(unittest.TestCase):
     def make(self):
         self.tmp=tempfile.TemporaryDirectory(); self.ser=FakeSerial()
+        self.ser.lines=[b'MINI Q-POD SERVO MAPPING version=1.0.0 build=test\n',b'PWM_requested=OFF prescale=121\n']
+        self.ser.lines += [f'CONFIG ch={i} min=0 center=90 max=180 direction=1 margin=5 safeMin=5 safeMax=175\n'.encode() for i in range(13)]
         return ServoMappingConsole(self.ser, Path(self.tmp.name)/'log.txt')
     def test_whitelist_and_arm_confirmation(self):
         c=self.make(); self.assertTrue(c.validate('STATUS')); self.assertFalse(c.validate('WALK')); self.assertFalse(c.validate('SAVE'))

@@ -146,6 +146,7 @@ class ServoMappingConsole:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Mini Q-POD servo mapping console")
     ap.add_argument("--port", default="COM9"); ap.add_argument("--baud", type=int, default=115200)
+    ap.add_argument("--select", type=int, default=None, choices=range(13), help="seleccionar canal al completar el sondeo")
     ap.add_argument("--log", type=Path, default=Path("local_backups/servo_mapping_console.log"))
     args = ap.parse_args(argv)
     try:
@@ -156,9 +157,12 @@ def main(argv=None) -> int:
     console = ServoMappingConsole(ser, args.log)
     try:
         console.start()
-        print("Consola lista. X=apagado de emergencia. Ctrl+C=cerrar.")
-        for raw in sys.stdin:
-            text = raw.strip()
+        print(f"MINI Q-POD SERVO MAPPING\n{args.port} conectado")
+        if args.select is not None:
+            console.send(f"SELECT {args.select}"); time.sleep(.25); console.send("STATUS"); time.sleep(.25); console.send("IMU")
+        print("X=apagado de emergencia. Ctrl+C=cerrar.")
+        while True:
+            text = input("qpod> ").strip()
             if not text: continue
             if text.upper() == "ARM 0 90": console.arm_ch0(90.0, lambda p: input(p).strip().lower() == "y")
             elif text.upper().startswith("MOVE 0 "): console.move_ch0(float(text.split()[2]))

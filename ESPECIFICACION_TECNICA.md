@@ -6,10 +6,10 @@
 | Proyecto | Mini Q-Pod |
 | Repositorio | `https://github.com/Jcabroc/mini-qpod.git` |
 | Rama oficial actual | `main` |
-| Versión del documento | `0.1.0` |
-| Firmware oficial en desarrollo | `mini_qpod_mvp/mini_qpod_mvp.ino` |
-| Estado | MVP compilable, pendiente de validación física |
-| Última actualización | 2026-08-12 |
+| Versión del documento | `0.2.0` |
+| Firmware activo en desarrollo | `mini_qpod_ik_walk_mvp/mini_qpod_ik_walk_mvp.ino` |
+| Estado | IK y caminata compilables, pendientes de validación física |
+| Última actualización | 2026-10-02 |
 
 > Este documento es la fuente de verdad técnica del Mini Q-Pod. Toda decisión
 > que cambie hardware, conexiones, límites, seguridad, comportamiento, protocolo,
@@ -63,25 +63,30 @@ incertidumbre no son detección de colisión. No incluye transporte físico.
 
 ### 2.1 Archivos oficiales
 
-El desarrollo nuevo debe realizarse en:
+El firmware activo de movimiento se desarrolla en:
 
 ```text
-mini_qpod_mvp/
-├── mini_qpod_mvp.ino
-├── robot_config.h
-├── servo_control.h
-├── gait_balance.h
+mini_qpod_ik_walk_mvp/
+├── mini_qpod_ik_walk_mvp.ino
+├── ik_walk_core.h
+├── gait_presets.h
+├── control_lite.h
+├── ps2j_packet.h
 └── README.md
 ```
 
 Responsabilidades:
 
-- `mini_qpod_mvp.ino`: entrada, estados, consola serial y coordinación.
-- `robot_config.h`: configuración que normalmente modifica el operador.
-- `servo_control.h`: límites, movimiento suave, PCA9685 y EEPROM.
-- `gait_balance.h`: postura, desplazamiento, elevación, marcha e IMU.
+- `mini_qpod_ik_walk_mvp.ino`: entrada, radio, consola serial y coordinación.
+- `ik_walk_core.h`: geometría, límites eléctricos y marcha por cuadro.
+- `gait_presets.h`: presets generados desde el simulador.
+- `control_lite.h` y `ps2j_packet.h`: contrato de radio PS2J.
 - `README.md`: instalación y procedimiento práctico de operación.
 - `ESPECIFICACION_TECNICA.md`: requisitos, decisiones y estado técnico oficial.
+
+`nano_servo_mapping/` sigue siendo el firmware oficial para calibración segura
+de un canal; `mini_qpod_mvp/` queda como referencia del MVP anterior. Ninguno
+de los dos debe duplicarse ni usarse como base para una marcha nueva.
 
 ### 2.2 Código histórico
 

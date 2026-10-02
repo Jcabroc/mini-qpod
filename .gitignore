@@ -13,3 +13,9 @@ desktop.ini
 
 # Runtime logs
 *.log
+
+# Local hardware outputs and private device backups.  Rebuild firmware instead
+# of committing generated binaries; keep raw device images outside this repo.
+**/build/
+esp32cam/backups/*.bin
+esp32cam/backups/*.sha256

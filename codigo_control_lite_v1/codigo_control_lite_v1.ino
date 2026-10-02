@@ -62,6 +62,7 @@ struct PS2J_Packet {
   uint8_t seq;    // contador
   uint8_t flags;  // 1=Lite (opcional)
 };
+static_assert(sizeof(PS2J_Packet) == 9, "Control Lite PS2J v1 wire packet must be 9 bytes on AVR");
 
 static const uint8_t PS2J_FLAG_LITE = 1;
 

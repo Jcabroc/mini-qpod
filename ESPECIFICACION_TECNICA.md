@@ -6,8 +6,8 @@
 | Proyecto | Mini Q-Pod |
 | Repositorio | `https://github.com/Jcabroc/mini-qpod.git` |
 | Rama oficial actual | `main` |
-| Versión del documento | `0.3.0` |
-| Firmware activo en desarrollo | `mini_qpod_ik_walk_mvp/mini_qpod_ik_walk_mvp.ino` |
+| Versión del documento | `0.4.0` |
+| Firmware activo en desarrollo | `mini_qpod_pico_walk_mvp/mini_qpod_pico_walk_mvp.ino` |
 | Estado | IK y caminata compilables, pendientes de validación física |
 | Última actualización | 2026-10-02 |
 
@@ -66,35 +66,42 @@ incertidumbre no son detección de colisión. No incluye transporte físico.
 El firmware activo de movimiento se desarrolla en:
 
 ```text
-mini_qpod_ik_walk_mvp/
-├── mini_qpod_ik_walk_mvp.ino
+mini_qpod_pico_walk_mvp/
+├── mini_qpod_pico_walk_mvp.ino
+├── pico_w_pins.h
+└── README.md
+
+libraries/MiniQpodWalkCore/src/
+├── ik_walk_runtime.h
 ├── ik_walk_core.h
 ├── gait_presets.h
 ├── control_lite.h
-├── ps2j_packet.h
-└── README.md
+└── ps2j_packet.h
 ```
 
 Responsabilidades:
 
-- `mini_qpod_ik_walk_mvp.ino`: entrada, radio, consola serial y coordinación.
+- `mini_qpod_pico_walk_mvp.ino`: entrada, radio, consola serial y coordinación Pico W.
+- `pico_w_pins.h`: mapa explícito I²C/SPI/CE/CSN de la Pico W.
 - `ik_walk_core.h`: geometría, límites eléctricos y marcha por cuadro.
 - `gait_presets.h`: presets generados desde el simulador.
 - `control_lite.h` y `ps2j_packet.h`: contrato de radio PS2J.
 - `README.md`: instalación y procedimiento práctico de operación.
 - `ESPECIFICACION_TECNICA.md`: requisitos, decisiones y estado técnico oficial.
 
-`nano_servo_mapping/` sigue siendo el firmware oficial para calibración segura
-de un canal; `mini_qpod_mvp/` queda como referencia del MVP anterior. Ninguno
-de los dos debe duplicarse ni usarse como base para una marcha nueva.
+`mini_qpod_ik_walk_mvp/` conserva la envoltura Nano como referencia de la misma
+lógica compartida; `nano_servo_mapping/` sigue siendo el firmware oficial para
+calibración segura de un canal; `mini_qpod_mvp/` queda como referencia del MVP
+anterior. Ninguno debe duplicarse ni usarse como base para una marcha nueva.
 
 ### 2.4 Decisión de plataforma de locomoción (2026-10-02)
 
-Se selecciona Raspberry Pi Pico W/RP2040 para la futura implementación de
-locomoción. El firmware Nano actual permanece como referencia; esta decisión no
-migra hardware, no carga firmware ni modifica geometría, calibración o límites.
-La justificación, capacidad compilada y adaptaciones pendientes de PCA9685 y
-NRF24 están en [docs/DECISION_LOCOMOCION.md](docs/DECISION_LOCOMOCION.md).
+Se selecciona Raspberry Pi Pico W/RP2040 para locomoción. Existe una envoltura
+Pico que compila y reutiliza el núcleo compartido; el firmware Nano permanece
+como referencia. Esta implementación no carga hardware ni modifica geometría,
+calibración o límites. La justificación está en
+[docs/DECISION_LOCOMOCION.md](docs/DECISION_LOCOMOCION.md) y el cableado/banco
+en [docs/PICO_W_LOCOMOTION_BENCH.md](docs/PICO_W_LOCOMOTION_BENCH.md).
 
 ### 2.2 Código histórico
 
@@ -157,7 +164,8 @@ Se usan tres estados:
 
 | Propiedad | Valor actual |
 |---|---|
-| Plataforma objetivo | Arduino Nano / ATmega328P |
+| Plataforma de locomoción | Raspberry Pi Pico W / RP2040 |
+| Referencia de firmware | Arduino Nano / ATmega328P (sin migración física) |
 | Baudrate serial | 115200 |
 | Bus de servos | I²C mediante PCA9685 |
 | Dirección PCA9685 | `0x40` |
@@ -167,10 +175,11 @@ Se usan tres estados:
 | LED | Pin D5 |
 | Buzzer | Pin D4 |
 
-La Raspberry Pi Pico W concentra los sensores. La orientación llega al Nano por
-UART software a 38400 baud: GP4/TX Pico hacia D2/RX Nano. El retorno D3/TX Nano
-hacia GP5/RX Pico queda desconectado en el MVP porque requiere adaptación de nivel
-de 5 V a 3.3 V. Ambas placas deben compartir GND.
+La arquitectura Nano↔Pico anterior queda como referencia histórica. La
+locomoción Pico W propuesta usa I²C GP0/GP1 para PCA9685 y SPI0 GP16–GP20 para
+NRF24; las conexiones, VCC lógico a 3,3 V y confirmaciones físicas requeridas
+están en [docs/PICO_W_LOCOMOTION_BENCH.md](docs/PICO_W_LOCOMOTION_BENCH.md).
+Toda fuente de servos sigue separada y debe compartir GND con la lógica.
 
 Los valores de pulso son una conversión global de 0–180°. Los límites de cada
 articulación se aplican antes de esta conversión.

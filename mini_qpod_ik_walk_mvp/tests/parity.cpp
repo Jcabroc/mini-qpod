@@ -1,8 +1,8 @@
 #include <cstdio>
 #include <cstdlib>
-#include "../ik_walk_core.h"
-#include "../gait_presets.h"
-#include "../control_lite.h"
+#include "../../libraries/MiniQpodWalkCore/src/ik_walk_core.h"
+#include "../../libraries/MiniQpodWalkCore/src/gait_presets.h"
+#include "../../libraries/MiniQpodWalkCore/src/control_lite.h"
 int main(int argc,char **argv) {
   if(argc==7 && argv[1][0]=='Q') {
     uint8_t leg=(uint8_t)atoi(argv[2]);IkWalk::Vec3 start={(float)atof(argv[3]),(float)atof(argv[4]),(float)atof(argv[5])};

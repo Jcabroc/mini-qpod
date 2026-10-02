@@ -8,7 +8,8 @@ suben binarios generados o respaldos de dispositivos.
 
 | Componente | Estado | Uso |
 |---|---|---|
-| `mini_qpod_ik_walk_mvp/` | Activo, pendiente de validación física | Firmware Nano para IK y caminata lenta. |
+| `mini_qpod_pico_walk_mvp/` | Activo, pendiente de validación física | Firmware Pico W para IK y caminata lenta. |
+| `mini_qpod_ik_walk_mvp/` | Referencia Nano | Misma lógica compartida; conservar para comparación. |
 | `nano_servo_mapping/` | Activo de seguridad | Mapeo/calibración de un servo a la vez. |
 | `tools/ik_simulator/` | Activo de ingeniería | IK/FK matemática y validación no física. |
 | `tools/ik_walk_simulator/` | Activo de ingeniería | Simulador y paridad con el firmware de caminata. |

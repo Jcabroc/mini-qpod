@@ -1,13 +1,14 @@
 # Decisión de locomoción — Pico W/RP2040
 
-**Estado:** aprobada para la próxima implementación; migración de firmware y
-hardware deliberadamente fuera de este cambio.
+**Estado:** adoptada en firmware; carga, cableado y validación física
+deliberadamente fuera de este cambio.
 
 ## Decisión
 
-La **Raspberry Pi Pico W con RP2040** queda seleccionada como plataforma futura
-de locomoción. El Nano ATmega328P conserva el firmware actual de referencia y
-no se carga ni se modifica como parte de esta decisión.
+La **Raspberry Pi Pico W con RP2040** queda seleccionada como plataforma de
+locomoción. `mini_qpod_pico_walk_mvp/` implementa su envoltura usando el núcleo
+compartido; el Nano ATmega328P conserva una envoltura de referencia. Ninguno se
+carga ni se modifica físicamente como parte de esta decisión.
 
 La identificación está respaldada por los dos sketches de Pico y el FQBN
 `rp2040:rp2040:rpipicow`; por tanto el modelo documentado es Pico W con RP2040.
@@ -38,7 +39,7 @@ antes de validar movimiento.
 
 ## Adaptación que será necesaria después
 
-No se realiza aquí. La futura migración deberá conservar, sin reinterpretar,
+No se realiza aquí ninguna migración física. La futura validación deberá conservar, sin reinterpretar,
 la geometría y la calibración definidas en
 [ik_constraints.md](ik_constraints.md) y
 [ESPECIFICACION_TECNICA.md](../ESPECIFICACION_TECNICA.md).

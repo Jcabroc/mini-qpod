@@ -8,7 +8,7 @@ geometría, montaje, calibración y límites revisados en
 Compila sin cargar para Nano con bootloader antiguo:
 
 ```powershell
-arduino-cli compile --fqbn arduino:avr:nano:cpu=atmega328old mini_qpod_ik_walk_mvp
+arduino-cli compile --libraries libraries --fqbn arduino:avr:nano:cpu=atmega328old mini_qpod_ik_walk_mvp
 ```
 
 El HEX ya compilado para esa placa queda en

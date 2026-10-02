@@ -64,15 +64,16 @@ evidencia de simulación/host, no física.
   tensión y plan de migración o permanencia; la otra plataforma no recibe una
   migración implícita.
 - **Evidencia de implementación:** el Nano compila la marcha con 99% de flash
-  y 74% de RAM; la Pico W compila la estación de sensores con 15% de flash y
-  26% de RAM. Se selecciona Pico W/RP2040 para la futura locomoción sin migrar
-  en esta etapa. Véase [DECISION_LOCOMOCION.md](DECISION_LOCOMOCION.md).
+  y 74% de RAM. La envoltura Pico W, con el núcleo compartido, compila con 16%
+  de flash y 27% de RAM; conserva Nano como referencia. Véanse
+  [DECISION_LOCOMOCION.md](DECISION_LOCOMOCION.md) y
+  [PICO_W_LOCOMOTION_BENCH.md](PICO_W_LOCOMOTION_BENCH.md).
 - **Evidencia de simulación:** las 9 pruebas de paridad Python/C++ pasaron con
   Zig 0.16.0; no miden tiempo de peor caso del microcontrolador.
 - **Evidencia de prueba física:** no hay comparación física Nano/Pico ni
   movimiento de robot.
 - **Dependencias y problemas pendientes:** confirmar físicamente la revisión
-  Pico W, VCC/pull-ups PCA9685, cableado NRF24 y mapa de GPIO antes de migrar.
+  Pico W, VCC/pull-ups PCA9685 y cableado NRF24 antes de validar.
 
 ### 3. Validación física de READY e IK por pata
 
@@ -84,9 +85,9 @@ evidencia de simulación/host, no física.
   READY y movimientos IK individuales dentro de límites aprobados, sin choque,
   saturación, reinicio ni calentamiento anómalo; se registran signos, offsets y
   observaciones reales por canal.
-- **Evidencia de implementación:** `mini_qpod_ik_walk_mvp/` contiene READY,
-  conversión y rechazo por límites; `nano_servo_mapping/` permite medir un
-  canal de manera segura.
+- **Evidencia de implementación:** `mini_qpod_pico_walk_mvp/` contiene READY,
+  conversión y rechazo por límites mediante el núcleo compartido;
+  `nano_servo_mapping/` permite medir un canal de manera segura.
 - **Evidencia de simulación:** IK/FK, límites host y trayectorias de READY
   pasan pruebas; su propia documentación declara que no validan hardware.
 - **Evidencia de prueba física:** ninguna. El registro histórico solo llega a

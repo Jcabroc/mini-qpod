@@ -21,6 +21,9 @@ La fuente de verdad técnica, hardware, seguridad y estados de validación es
 marchas simuladas **no** constituyen una validación física: seguir siempre los
 procedimientos de seguridad de cada firmware.
 
+La planificación oficial de la segunda etapa, sus criterios de cierre, evidencia
+y sincronización entre equipos está en [docs/ROADMAP.md](docs/ROADMAP.md).
+
 ## Flujo único de trabajo
 
 1. Actualiza antes de empezar: `git pull --ff-only origin main`.

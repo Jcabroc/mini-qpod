@@ -23,6 +23,8 @@ procedimientos de seguridad de cada firmware.
 
 La planificación oficial de la segunda etapa, sus criterios de cierre, evidencia
 y sincronización entre equipos está en [docs/ROADMAP.md](docs/ROADMAP.md).
+La decisión documentada para la futura locomoción es
+[Pico W/RP2040](docs/DECISION_LOCOMOCION.md); no implica una migración realizada.
 
 ## Flujo único de trabajo
 

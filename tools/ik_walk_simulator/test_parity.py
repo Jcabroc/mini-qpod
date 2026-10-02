@@ -1,15 +1,27 @@
 """Cross-language vectors against the firmware IK/mapping and gait header."""
-import json, pathlib, shutil, subprocess, tempfile, unittest
+import importlib.util, json, pathlib, shutil, subprocess, sys, tempfile, unittest
 from tools.ik_walk_simulator.walk import READY_FEET, Walker, solve, ready_frame, gait_swing, gait_phase_at, balance_translation
 
 ROOT=pathlib.Path(__file__).resolve().parents[2]
+
+def compiler_command():
+    """Return a C++ command, including the bundled Zig fallback when available."""
+    native = shutil.which("g++") or shutil.which("clang++")
+    if native:
+        return [native]
+    if importlib.util.find_spec("ziglang"):
+        # The ziglang wheel provides a host C++ compiler without requiring a
+        # system-wide g++/clang++ installation.
+        return [sys.executable, "-m", "ziglang", "c++", "-Wno-nullability-completeness"]
+    return None
+
 class FirmwareParity(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.compiler=shutil.which("g++") or shutil.which("clang++")
+        cls.compiler=compiler_command()
         if not cls.compiler: raise unittest.SkipTest("g++/clang++ not installed; run test_parity.py on a host with a C++ compiler")
         cls.tmp=tempfile.TemporaryDirectory(); cls.exe=pathlib.Path(cls.tmp.name)/"parity.exe"
-        subprocess.run([cls.compiler,"-std=c++11",str(ROOT/"mini_qpod_ik_walk_mvp/tests/parity.cpp"),"-o",str(cls.exe)],check=True)
+        subprocess.run([*cls.compiler,"-std=c++11",str(ROOT/"mini_qpod_ik_walk_mvp/tests/parity.cpp"),"-o",str(cls.exe)],check=True)
     @classmethod
     def tearDownClass(cls):
         if hasattr(cls,"tmp"): cls.tmp.cleanup()

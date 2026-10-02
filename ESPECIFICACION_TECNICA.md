@@ -6,7 +6,7 @@
 | Proyecto | Mini Q-Pod |
 | Repositorio | `https://github.com/Jcabroc/mini-qpod.git` |
 | Rama oficial actual | `main` |
-| Versión del documento | `0.2.0` |
+| Versión del documento | `0.3.0` |
 | Firmware activo en desarrollo | `mini_qpod_ik_walk_mvp/mini_qpod_ik_walk_mvp.ino` |
 | Estado | IK y caminata compilables, pendientes de validación física |
 | Última actualización | 2026-10-02 |
@@ -87,6 +87,14 @@ Responsabilidades:
 `nano_servo_mapping/` sigue siendo el firmware oficial para calibración segura
 de un canal; `mini_qpod_mvp/` queda como referencia del MVP anterior. Ninguno
 de los dos debe duplicarse ni usarse como base para una marcha nueva.
+
+### 2.4 Decisión de plataforma de locomoción (2026-10-02)
+
+Se selecciona Raspberry Pi Pico W/RP2040 para la futura implementación de
+locomoción. El firmware Nano actual permanece como referencia; esta decisión no
+migra hardware, no carga firmware ni modifica geometría, calibración o límites.
+La justificación, capacidad compilada y adaptaciones pendientes de PCA9685 y
+NRF24 están en [docs/DECISION_LOCOMOCION.md](docs/DECISION_LOCOMOCION.md).
 
 ### 2.2 Código histórico
 

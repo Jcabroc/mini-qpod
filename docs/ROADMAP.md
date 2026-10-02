@@ -27,10 +27,10 @@ evidencia de regresión ni de validación física.
 
 En la base indicada se ejecutaron sin hardware: 12 pruebas de IK, 13 pruebas
 host de caminata y 28 de calibración (`53` en total). Además pasaron 5 pruebas
-de Pose Lab y 6 de consola (`64` host en total). `test_parity.py` contiene 10
-pruebas de paridad, pero en este PC se omitió su clase completa porque no hay
-`g++` ni `clang++`; por tanto, la paridad C++ **no está aprobada para esta
-base**. Todos esos resultados son evidencia de simulación/host, no física.
+de Pose Lab y 6 de consola (`64` host en total). Posteriormente se habilitó
+Zig como compilador C++ host y pasaron las **9** pruebas que realmente contiene
+`test_parity.py` (el conteo previo de 10 era erróneo). Todos esos resultados son
+evidencia de simulación/host, no física.
 
 ## Etapas
 
@@ -56,20 +56,23 @@ base**. Todos esos resultados son evidencia de simulación/host, no física.
 
 ### 2. Decisión Nano o Pico para locomoción
 
-- **Estado:** pendiente.
+- **Estado:** completada; implementación de la migración pendiente.
 - **Objetivo:** escoger y documentar una única plataforma responsable de la
   locomoción, dejando las demás con responsabilidades compatibles.
 - **Criterio de cierre:** una decisión registrada en la especificación con
   responsable de PWM, radio, sensores, protocolo entre placas, límites de
   tensión y plan de migración o permanencia; la otra plataforma no recibe una
   migración implícita.
-- **Evidencia de implementación:** hay firmware Nano activo para caminata y
-  Pico W para sensores; esto no equivale a una decisión arquitectónica final.
-- **Evidencia de simulación:** los modelos host no seleccionan hardware.
-- **Evidencia de prueba física:** no hay comparación física de ambas opciones.
-- **Dependencias y problemas pendientes:** confirmar requisitos de latencia,
-  disponibilidad de pines, adaptación de nivel Nano↔Pico y alimentación. La
-  decisión permanece abierta deliberadamente.
+- **Evidencia de implementación:** el Nano compila la marcha con 99% de flash
+  y 74% de RAM; la Pico W compila la estación de sensores con 15% de flash y
+  26% de RAM. Se selecciona Pico W/RP2040 para la futura locomoción sin migrar
+  en esta etapa. Véase [DECISION_LOCOMOCION.md](DECISION_LOCOMOCION.md).
+- **Evidencia de simulación:** las 9 pruebas de paridad Python/C++ pasaron con
+  Zig 0.16.0; no miden tiempo de peor caso del microcontrolador.
+- **Evidencia de prueba física:** no hay comparación física Nano/Pico ni
+  movimiento de robot.
+- **Dependencias y problemas pendientes:** confirmar físicamente la revisión
+  Pico W, VCC/pull-ups PCA9685, cableado NRF24 y mapa de GPIO antes de migrar.
 
 ### 3. Validación física de READY e IK por pata
 

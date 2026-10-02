@@ -15,9 +15,10 @@ JPEG as hexadecimal text every five seconds over the 115200-baud UART.
 It does not configure Wi-Fi. Run `capture.py` using the Espressif Python
 environment to save one frame under `results/`.
 
-Original firmware backup: `backups/original-4MB.bin` (only usable after the
-read completes successfully). Keep this file private; firmware can contain
-saved configuration. Test binaries are under `firmware/`.
+The original firmware backup is deliberately **not** part of this repository:
+raw device images can contain saved configuration. Keep it in a private local
+location after a successful read, and restore only from that private copy.
+Test binaries are under `firmware/`.
 
 Flash test (after a successful backup), with `python -m esptool`:
 
@@ -25,6 +26,7 @@ Flash test (after a successful backup), with `python -m esptool`:
 --port COM25 --baud 115200 write_flash --flash_mode dio --flash_freq 40m --flash_size 4MB 0x1000 firmware/bootloader.bin 0x8000 firmware/partition-table.bin 0x10000 firmware/cam_usb_test.bin
 ```
 
-Restore original with `python -m esptool --port COM25 --baud 115200 write_flash 0 backups/original-4MB.bin`.
+Restore an original only from its private local location with
+`python -m esptool --port COM25 --baud 115200 write_flash 0 RUTA_PRIVADA_AL_RESPALDO.bin`.
 
 Validated on 2026-09-22: full original backup verified by device MD5; test flash verified; PSRAM 8388608 bytes; OV2640 PID 0x26 initialized successfully; captured and visually inspected a 640x480 JPEG in results/camera.jpg.

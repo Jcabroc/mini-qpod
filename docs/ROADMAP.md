@@ -73,7 +73,7 @@ evidencia de simulación/host, no física.
 - **Evidencia de prueba física:** no hay comparación física Nano/Pico ni
   movimiento de robot.
 - **Dependencias y problemas pendientes:** confirmar físicamente la revisión
-  Pico W, VCC/pull-ups PCA9685 y cableado NRF24 antes de validar.
+  Pico WH, VCC/pull-ups PCA9685 y cableado NRF24 antes de validar READY.
 
 ### 3. Validación física de READY e IK por pata
 
@@ -164,13 +164,14 @@ evidencia de simulación/host, no física.
 ### 8. Integración posterior de S3, IMU y sensores
 
 - **Estado:** pendiente.
-- **Objetivo:** integrar S3, IMU y sensores después de estabilizar locomoción,
+- **Objetivo:** integrar ESP32-S3 SuperMini, IMU y sensores después de estabilizar locomoción,
   definiendo responsabilidades, alimentación, comunicaciones y fallos seguros.
 - **Criterio de cierre:** arquitectura y protocolo documentados; telemetría y
   fallos de cada sensor validados sin degradar las protecciones de locomoción;
   cualquier balance activo tiene pruebas físicas separadas.
-- **Evidencia de implementación:** hay Pico W/MPU6050, ESP32-CAM experimental y
-  diagnósticos de visión; no constituyen una integración S3 ni balance validado.
+- **Evidencia de implementación:** GP8/GP9 están reservados en Pico WH para
+  ESP32-S3; la imagen del proveedor indica ESP32-S3 FH4R2, pendiente de
+  comprobación física. No hay integración S3 ni balance validado.
 - **Evidencia de simulación:** hay parser/monitor de visión e interfaces IMU;
   no prueban cableado, tiempos ni control físico.
 - **Evidencia de prueba física:** ninguna de integración con locomoción.

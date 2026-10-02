@@ -6,7 +6,7 @@
 | Proyecto | Mini Q-Pod |
 | Repositorio | `https://github.com/Jcabroc/mini-qpod.git` |
 | Rama oficial actual | `main` |
-| Versión del documento | `0.4.0` |
+| Versión del documento | `0.5.0` |
 | Firmware activo en desarrollo | `mini_qpod_pico_walk_mvp/mini_qpod_pico_walk_mvp.ino` |
 | Estado | IK y caminata compilables, pendientes de validación física |
 | Última actualización | 2026-10-02 |
@@ -81,8 +81,8 @@ libraries/MiniQpodWalkCore/src/
 
 Responsabilidades:
 
-- `mini_qpod_pico_walk_mvp.ino`: entrada, radio, consola serial y coordinación Pico W.
-- `pico_w_pins.h`: mapa explícito I²C/SPI/CE/CSN de la Pico W.
+- `mini_qpod_pico_walk_mvp.ino`: entrada, radio, consola serial y coordinación Pico WH.
+- `pico_w_pins.h`: mapa explícito I²C/SPI/CE/CSN y UART reservada de la Pico WH.
 - `ik_walk_core.h`: geometría, límites eléctricos y marcha por cuadro.
 - `gait_presets.h`: presets generados desde el simulador.
 - `control_lite.h` y `ps2j_packet.h`: contrato de radio PS2J.
@@ -96,7 +96,7 @@ anterior. Ninguno debe duplicarse ni usarse como base para una marcha nueva.
 
 ### 2.4 Decisión de plataforma de locomoción (2026-10-02)
 
-Se selecciona Raspberry Pi Pico W/RP2040 para locomoción. Existe una envoltura
+Se selecciona Raspberry Pi Pico WH/RP2040 para locomoción. Existe una envoltura
 Pico que compila y reutiliza el núcleo compartido; el firmware Nano permanece
 como referencia. Esta implementación no carga hardware ni modifica geometría,
 calibración o límites. La justificación está en
@@ -149,8 +149,10 @@ Se usan tres estados:
 | Fuente externa de servos | PENDIENTE | Documentar tensión, corriente y modelo |
 | NRF24L01 | HISTÓRICO | Existe en firmware anterior; fuera del MVP inicial |
 | Mando PS2J | HISTÓRICO | Existe en firmware anterior; fuera del MVP inicial |
-| Modelo de IMU | CONFIRMADO POR USUARIO | MPU6050 conectada a la Pico W |
-| MPU6050 `0x68` | CONFIRMADO POR USUARIO | La Pico realiza la lectura I2C |
+| Pico WH / RP2040 | CONFIRMADO POR USUARIO | Serigrafía física comunicada; locomoción |
+| ESP32-S3 SuperMini | PENDIENTE FÍSICO | Sensores/IMU posteriores; imagen de proveedor indica ESP32-S3 FH4R2 |
+| Modelo de IMU | HISTÓRICO | MPU6050 usada por la Pico antes de la transición |
+| MPU6050 `0x68` | HISTÓRICO | I²C GP0/GP1 en firmware de sensores anterior |
 | Límites mecánicos | PROVISIONAL | Valores heredados, faltan pruebas servo por servo |
 | Postura base | PROVISIONAL | Algoritmo compilado, falta prueba física |
 | Elevación individual | PROVISIONAL | Secuencia compilada, falta prueba física |
@@ -164,7 +166,7 @@ Se usan tres estados:
 
 | Propiedad | Valor actual |
 |---|---|
-| Plataforma de locomoción | Raspberry Pi Pico W / RP2040 |
+| Plataforma de locomoción | Raspberry Pi Pico WH / RP2040 |
 | Referencia de firmware | Arduino Nano / ATmega328P (sin migración física) |
 | Baudrate serial | 115200 |
 | Bus de servos | I²C mediante PCA9685 |
@@ -176,9 +178,10 @@ Se usan tres estados:
 | Buzzer | Pin D4 |
 
 La arquitectura Nano↔Pico anterior queda como referencia histórica. La
-locomoción Pico W propuesta usa I²C GP0/GP1 para PCA9685 y SPI0 GP16–GP20 para
-NRF24; las conexiones, VCC lógico a 3,3 V y confirmaciones físicas requeridas
-están en [docs/PICO_W_LOCOMOTION_BENCH.md](docs/PICO_W_LOCOMOTION_BENCH.md).
+locomoción Pico WH usa I²C GP0/GP1 para PCA9685 y SPI0 GP16–GP20 para NRF24;
+GP8/GP9 quedan reservados para UART con ESP32-S3. Las conexiones, VCC lógico a
+3,3 V y confirmaciones físicas requeridas están en
+[docs/PICO_W_LOCOMOTION_BENCH.md](docs/PICO_W_LOCOMOTION_BENCH.md).
 Toda fuente de servos sigue separada y debe compartir GND con la lógica.
 
 Los valores de pulso son una conversión global de 0–180°. Los límites de cada
@@ -200,11 +203,10 @@ Datos pendientes de registrar tras inspección física:
 
 ### 4.3 IMU
 
-La MPU6050 en `0x68` está conectada por I2C a la Pico W (SDA GP0, SCL GP1).
-La Pico calcula roll y pitch mediante filtro complementario y envía al Nano la
-trama `IMU,<secuencia>,<roll>,<pitch>*<CRC>` cada 20 ms. El CRC es un XOR de los
-bytes anteriores al asterisco. El Nano considera inseguro un enlace sin trama
-válida durante 250 ms.
+La MPU6050 en `0x68` estaba documentada en I²C de la Pico (SDA GP0, SCL GP1)
+como parte de la arquitectura histórica. La Pico WH dedica esos pines al
+PCA9685; la futura ESP32-S3 asumirá sensores/IMU. No existe aún protocolo ni
+implementación S3.
 
 Antes de habilitar pruebas con movimiento debe confirmarse:
 

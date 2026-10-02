@@ -8,7 +8,7 @@ suben binarios generados o respaldos de dispositivos.
 
 | Componente | Estado | Uso |
 |---|---|---|
-| `mini_qpod_pico_walk_mvp/` | Activo, pendiente de validación física | Firmware Pico W para IK y caminata lenta. |
+| `mini_qpod_pico_walk_mvp/` | Activo, pendiente de validación física | Firmware Pico WH para IK y caminata lenta. |
 | `mini_qpod_ik_walk_mvp/` | Referencia Nano | Misma lógica compartida; conservar para comparación. |
 | `nano_servo_mapping/` | Activo de seguridad | Mapeo/calibración de un servo a la vez. |
 | `tools/ik_simulator/` | Activo de ingeniería | IK/FK matemática y validación no física. |
@@ -24,8 +24,9 @@ procedimientos de seguridad de cada firmware.
 
 La planificación oficial de la segunda etapa, sus criterios de cierre, evidencia
 y sincronización entre equipos está en [docs/ROADMAP.md](docs/ROADMAP.md).
-La decisión documentada para la futura locomoción es
-[Pico W/RP2040](docs/DECISION_LOCOMOCION.md); no implica una migración realizada.
+La decisión documentada para la locomoción es
+[Pico WH/RP2040](docs/DECISION_LOCOMOCION.md). La ESP32-S3 SuperMini queda
+reservada para sensores en una etapa posterior.
 
 ## Flujo único de trabajo
 
